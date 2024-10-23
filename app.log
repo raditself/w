@@ -20,3 +20,7 @@ Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.10/d
 Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub->ctransformers->-r requirements.txt (line 5)) (2.2.3)
 Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub->ctransformers->-r requirements.txt (line 5)) (3.10)
 Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub->ctransformers->-r requirements.txt (line 5)) (3.4.0)
+ * Serving Flask app 'app'
+ * Debug mode: on
+Address already in use
+Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.
