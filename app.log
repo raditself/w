@@ -25,3 +25,6 @@ Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python
 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
  * Running on http://127.0.0.1:5000
 [33mPress CTRL+C to quit[0m
+ * Restarting with watchdog (inotify)
+ * Debugger is active!
+ * Debugger PIN: 259-446-379
