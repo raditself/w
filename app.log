@@ -1,0 +1,1 @@
+Requirement already satisfied: flask in /usr/local/lib/python3.10/dist-packages (from -r requirements.txt (line 2)) (3.0.3)
