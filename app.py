@@ -43,7 +43,8 @@ def upload_model():
         file.save(filepath)
         try:
             model = AutoModelForCausalLM.from_pretrained(filepath)
-            return jsonify({'success': 'Model uploaded and loaded successfully'}), 200
+            initial_greeting = model("Hello! How can I assist you today?")
+            return jsonify({'success': 'Model uploaded and loaded successfully', 'initial_greeting': initial_greeting}), 200
         except Exception as e:
             return jsonify({'error': f'Error loading model: {str(e)}'}), 500
     return jsonify({'error': 'Invalid file type'}), 400

@@ -51,8 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (response.ok) {
-                    model = await response.json();
-                    addMessage('bot', 'Model uploaded successfully. You can start chatting now!');
+                    const result = await response.json();
+                    model = result;
+                    addMessage('bot', 'Model uploaded successfully.');
+                    if (result.initial_greeting) {
+                        addMessage('bot', result.initial_greeting);
+                    }
                 } else {
                     addMessage('bot', 'Failed to upload the model. Please try again.');
                 }
