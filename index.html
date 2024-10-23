@@ -4,23 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Model Chat Bot</title>
+    <title>StableLM Chat</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            <h1>Custom Model Chat Bot</h1>
-        </div>
-        <div class="model-upload">
-            <input type="file" id="model-file" accept=".bin,.gguf">
-            <button id="upload-model">Upload Model</button>
-            <div id="model-status" class="status-not-loaded">No model loaded</div>
-        </div>
+    <div id="chat-container">
+        <div id="model-status"></div>
         <div id="chat-messages"></div>
-        <div class="chat-input">
-            <input type="text" id="user-input" placeholder="Type your message...">
-            <button id="send-button">Send</button>
+        <form id="chat-form">
+            <input type="text" id="user-input" placeholder="Type your message..." required>
+            <button type="submit" id="send-button" disabled>Send</button>
+        </form>
+        <div id="download-container">
+            <button id="download-button">Download Model</button>
+            <div id="download-status"></div>
         </div>
     </div>
     <script src="script.js"></script>

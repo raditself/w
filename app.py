@@ -2,64 +2,49 @@
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from werkzeug.utils import secure_filename
 from ctransformers import AutoModelForCausalLM
+from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='..', static_url_path='')
 CORS(app)
 
-MODEL_FOLDER = 'models'
-ALLOWED_EXTENSIONS = {'bin', 'gguf'}
-
-if not os.path.exists(MODEL_FOLDER):
-    os.makedirs(MODEL_FOLDER)
-
+MODEL_PATH = "stablelm-2-1_6b-chat.Q4_K_M.imx.gguf"
 model = None
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/<path:path>')
-def serve_static(path):
-    return send_from_directory('.', path)
+@app.route('/check_model', methods=['GET'])
+def check_model():
+    return jsonify({"model_exists": os.path.exists(MODEL_PATH)})
 
 @app.route('/upload_model', methods=['POST'])
 def upload_model():
-    global model
     if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+        return jsonify({"error": "No file part"}), 400
     file = request.files['file']
     if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-    if file and allowed_file(file.filename):
+        return jsonify({"error": "No selected file"}), 400
+    if file:
         filename = secure_filename(file.filename)
-        filepath = os.path.join(MODEL_FOLDER, filename)
-        file.save(filepath)
-        try:
-            model = AutoModelForCausalLM.from_pretrained(filepath)
-            return jsonify({'success': 'Model uploaded and loaded successfully'}), 200
-        except Exception as e:
-            return jsonify({'error': f'Error loading model: {str(e)}'}), 500
-    return jsonify({'error': 'Invalid file type'}), 400
+        file.save(os.path.join(app.root_path, MODEL_PATH))
+        return jsonify({"message": "Model uploaded successfully"}), 200
 
 @app.route('/chat', methods=['POST'])
 def chat():
     global model
-    if not model:
-        return jsonify({'error': 'Model not loaded'}), 400
+    if model is None:
+        if not os.path.exists(MODEL_PATH):
+            return jsonify({"error": "Model not found. Please download the model first."}), 400
+        model = AutoModelForCausalLM.from_pretrained(MODEL_PATH, model_type="stablelm")
     
     data = request.json
-    user_input = data.get('message', '')
+    user_input = data['message']
     
-    try:
-        response = model(user_input)
-        return jsonify({'response': response}), 200
-    except Exception as e:
-        return jsonify({'error': f'Error generating response: {str(e)}'}), 500
+    response = model(f"Human: {user_input}\nAssistant:", max_new_tokens=100)
+    
+    return jsonify({"response": response})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5000)

@@ -1,82 +1,88 @@
 
-document.addEventListener('DOMContentLoaded', () => {
-    const chatMessages = document.getElementById('chat-messages');
-    const userInput = document.getElementById('user-input');
-    const sendButton = document.getElementById('send-button');
-    const uploadButton = document.getElementById('upload-model');
-    const modelFile = document.getElementById('model-file');
-    const modelStatus = document.getElementById('model-status');
+const chatMessages = document.getElementById('chat-messages');
+const chatForm = document.getElementById('chat-form');
+const userInput = document.getElementById('user-input');
+const sendButton = document.getElementById('send-button');
+const downloadButton = document.getElementById('download-button');
+const downloadStatus = document.getElementById('download-status');
+const modelStatus = document.getElementById('model-status');
 
-    let modelLoaded = false;
-
-    uploadButton.addEventListener('click', () => {
-        const file = modelFile.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('/upload_model', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    modelLoaded = true;
-                    modelStatus.textContent = 'Model loaded';
-                    modelStatus.className = 'status-loaded';
-                    addMessage('System', 'Model loaded successfully. You can start chatting now.');
-                } else {
-                    alert('Error uploading model: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error uploading model');
-            });
+async function checkModelStatus() {
+    try {
+        const response = await fetch('http://localhost:5000/check_model');
+        const data = await response.json();
+        if (data.model_exists) {
+            modelStatus.textContent = 'Model is ready';
+            sendButton.disabled = false;
+            downloadButton.style.display = 'none';
         } else {
-            alert('Please select a model file first.');
+            modelStatus.textContent = 'Model not found. Please download.';
+            sendButton.disabled = true;
+            downloadButton.style.display = 'block';
         }
-    });
+    } catch (error) {
+        console.error('Error checking model status:', error);
+        modelStatus.textContent = 'Error checking model status';
+    }
+}
 
-    sendButton.addEventListener('click', sendMessage);
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    });
+downloadButton.addEventListener('click', async () => {
+    downloadStatus.textContent = 'Downloading model...';
+    downloadButton.disabled = true;
+    try {
+        const response = await fetch('https://huggingface.co/Crataco/stablelm-2-1_6b-chat-imatrix-GGUF/resolve/main/stablelm-2-1_6b-chat.Q4_K_M.imx.gguf');
+        const blob = await response.blob();
+        const formData = new FormData();
+        formData.append('file', blob, 'stablelm-2-1_6b-chat.Q4_K_M.imx.gguf');
+        
+        await fetch('http://localhost:5000/upload_model', {
+            method: 'POST',
+            body: formData
+        });
+        
+        downloadStatus.textContent = 'Model downloaded successfully';
+        await checkModelStatus();
+    } catch (error) {
+        console.error('Error downloading model:', error);
+        downloadStatus.textContent = 'Error downloading model';
+        downloadButton.disabled = false;
+    }
+});
 
-    function sendMessage() {
-        const message = userInput.value.trim();
-        if (message && modelLoaded) {
-            addMessage('You', message);
-            userInput.value = '';
-
-            fetch('/chat', {
+chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const message = userInput.value.trim();
+    if (message) {
+        addMessage('user', message);
+        userInput.value = '';
+        try {
+            const response = await fetch('http://localhost:5000/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: message }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                addMessage('AI', data.response);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                addMessage('AI', 'Sorry, there was an error processing your request.');
+                body: JSON.stringify({ message }),
             });
-        } else if (!modelLoaded) {
-            alert('Please upload and load a model first.');
+            const data = await response.json();
+            if (data.error) {
+                addMessage('bot', data.error);
+            } else {
+                addMessage('bot', data.response);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            addMessage('bot', 'Sorry, there was an error processing your request.');
         }
     }
-
-    function addMessage(sender, message) {
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message';
-        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
 });
+
+function addMessage(sender, text) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message', `${sender}-message`);
+    messageElement.textContent = text;
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Check model status on page load
+checkModelStatus();
