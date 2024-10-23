@@ -49,6 +49,11 @@ def upload_model():
             return jsonify({'error': f'Error loading model: {str(e)}'}), 500
     return jsonify({'error': 'Invalid file type'}), 400
 
+@app.route('/model_status', methods=['GET'])
+def model_status():
+    global model
+    return jsonify({'loaded': model is not None}), 200
+
 @app.route('/chat', methods=['POST'])
 def chat():
     global model

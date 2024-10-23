@@ -1,5 +1,5 @@
 
-let model = null;
+let modelLoaded = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendButton = document.getElementById('send-button');
     const uploadButton = document.getElementById('upload-model');
     const modelFile = document.getElementById('model-file');
+    const modelStatus = document.getElementById('model-status');
 
     sendButton.addEventListener('click', sendMessage);
     userInput.addEventListener('keypress', (e) => {
@@ -17,12 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     uploadButton.addEventListener('click', uploadModel);
 
+    checkModelStatus();
+
     function sendMessage() {
         const message = userInput.value.trim();
         if (message) {
             addMessage('user', message);
             userInput.value = '';
-            if (model) {
+            if (modelLoaded) {
                 getBotResponse(message);
             } else {
                 addMessage('bot', 'Please upload a model first.');
@@ -52,7 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.ok) {
                     const result = await response.json();
-                    model = result;
+                    modelLoaded = true;
+                    updateModelStatus();
                     addMessage('bot', 'Model uploaded successfully.');
                     if (result.initial_greeting) {
                         addMessage('bot', result.initial_greeting);
@@ -89,5 +93,23 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error getting bot response:', error);
             addMessage('bot', 'An error occurred while getting the response. Please try again.');
         }
+    }
+
+    async function checkModelStatus() {
+        try {
+            const response = await fetch('/model_status');
+            if (response.ok) {
+                const data = await response.json();
+                modelLoaded = data.loaded;
+                updateModelStatus();
+            }
+        } catch (error) {
+            console.error('Error checking model status:', error);
+        }
+    }
+
+    function updateModelStatus() {
+        modelStatus.textContent = modelLoaded ? 'Model loaded' : 'No model loaded';
+        modelStatus.className = modelLoaded ? 'status-loaded' : 'status-not-loaded';
     }
 });
