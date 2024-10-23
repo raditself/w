@@ -6,6 +6,16 @@ const sendButton = document.getElementById('send-button');
 const downloadButton = document.getElementById('download-button');
 const downloadStatus = document.getElementById('download-status');
 const modelStatus = document.getElementById('model-status');
+const chatContainer = document.getElementById('chat-container');
+const shrinkButton = document.createElement('button');
+shrinkButton.textContent = 'Shrink';
+shrinkButton.id = 'shrink-button';
+chatContainer.insertBefore(shrinkButton, chatContainer.firstChild);
+
+shrinkButton.addEventListener('click', () => {
+    chatContainer.classList.toggle('shrink');
+    shrinkButton.textContent = chatContainer.classList.contains('shrink') ? 'Expand' : 'Shrink';
+});
 
 async function checkModelStatus() {
     try {
