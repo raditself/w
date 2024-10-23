@@ -1,115 +1,92 @@
 
-let modelLoaded = false;
-
 document.addEventListener('DOMContentLoaded', () => {
-    const chatMessages = document.getElementById('chat-messages');
+    const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
-    const sendButton = document.getElementById('send-button');
-    const uploadButton = document.getElementById('upload-model');
-    const modelFile = document.getElementById('model-file');
-    const modelStatus = document.getElementById('model-status');
+    const sendBtn = document.getElementById('send-btn');
+    const modelSelect = document.getElementById('model-select');
 
-    sendButton.addEventListener('click', sendMessage);
+    let modelLoaded = false;
+
+    // Fetch available models
+    fetch('/models')
+        .then(response => response.json())
+        .then(models => {
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                modelSelect.appendChild(option);
+            });
+        });
+
+    modelSelect.addEventListener('change', () => {
+        const selectedModel = modelSelect.value;
+        if (selectedModel) {
+            loadModel(selectedModel);
+        }
+    });
+
+    function loadModel(filename) {
+        fetch('/load_model', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ filename: filename }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                modelLoaded = true;
+                addMessage('AI', data.initial_greeting);
+            } else {
+                alert('Error loading model: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading model');
+        });
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
     userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             sendMessage();
         }
     });
 
-    uploadButton.addEventListener('click', uploadModel);
-
-    checkModelStatus();
-
     function sendMessage() {
         const message = userInput.value.trim();
-        if (message) {
-            addMessage('user', message);
+        if (message && modelLoaded) {
+            addMessage('You', message);
             userInput.value = '';
-            if (modelLoaded) {
-                getBotResponse(message);
-            } else {
-                addMessage('bot', 'Please upload a model first.');
-            }
+
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                addMessage('AI', data.response);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addMessage('AI', 'Sorry, there was an error processing your request.');
+            });
+        } else if (!modelLoaded) {
+            alert('Please select and load a model first.');
         }
     }
 
     function addMessage(sender, message) {
         const messageElement = document.createElement('div');
-        messageElement.classList.add('message', `${sender}-message`);
-        messageElement.textContent = message;
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    async function uploadModel() {
-        const file = modelFile.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append('model', file);
-
-            try {
-                const response = await fetch('/upload_model', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    modelLoaded = true;
-                    updateModelStatus();
-                    addMessage('bot', 'Model uploaded successfully.');
-                    if (result.initial_greeting) {
-                        addMessage('bot', result.initial_greeting);
-                    }
-                } else {
-                    addMessage('bot', 'Failed to upload the model. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error uploading model:', error);
-                addMessage('bot', 'An error occurred while uploading the model. Please try again.');
-            }
-        } else {
-            addMessage('bot', 'Please select a model file to upload.');
-        }
-    }
-
-    async function getBotResponse(message) {
-        try {
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message: message })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                addMessage('bot', data.response);
-            } else {
-                addMessage('bot', 'Sorry, I encountered an error while processing your message.');
-            }
-        } catch (error) {
-            console.error('Error getting bot response:', error);
-            addMessage('bot', 'An error occurred while getting the response. Please try again.');
-        }
-    }
-
-    async function checkModelStatus() {
-        try {
-            const response = await fetch('/model_status');
-            if (response.ok) {
-                const data = await response.json();
-                modelLoaded = data.loaded;
-                updateModelStatus();
-            }
-        } catch (error) {
-            console.error('Error checking model status:', error);
-        }
-    }
-
-    function updateModelStatus() {
-        modelStatus.textContent = modelLoaded ? 'Model loaded' : 'No model loaded';
-        modelStatus.className = modelLoaded ? 'status-loaded' : 'status-not-loaded';
+        messageElement.className = 'message';
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
 });
