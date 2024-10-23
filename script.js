@@ -1,55 +1,45 @@
 
 document.addEventListener('DOMContentLoaded', () => {
-    const chatBox = document.getElementById('chat-box');
+    const chatMessages = document.getElementById('chat-messages');
     const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-    const modelSelect = document.getElementById('model-select');
+    const sendButton = document.getElementById('send-button');
+    const uploadButton = document.getElementById('upload-model');
+    const modelFile = document.getElementById('model-file');
+    const modelStatus = document.getElementById('model-status');
 
     let modelLoaded = false;
 
-    // Fetch available models
-    fetch('/models')
-        .then(response => response.json())
-        .then(models => {
-            models.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model;
-                option.textContent = model;
-                modelSelect.appendChild(option);
-            });
-        });
+    uploadButton.addEventListener('click', () => {
+        const file = modelFile.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('file', file);
 
-    modelSelect.addEventListener('change', () => {
-        const selectedModel = modelSelect.value;
-        if (selectedModel) {
-            loadModel(selectedModel);
+            fetch('/upload_model', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    modelLoaded = true;
+                    modelStatus.textContent = 'Model loaded';
+                    modelStatus.className = 'status-loaded';
+                    addMessage('System', 'Model loaded successfully. You can start chatting now.');
+                } else {
+                    alert('Error uploading model: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error uploading model');
+            });
+        } else {
+            alert('Please select a model file first.');
         }
     });
 
-    function loadModel(filename) {
-        fetch('/load_model', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ filename: filename }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                modelLoaded = true;
-                addMessage('AI', data.initial_greeting);
-            } else {
-                alert('Error loading model: ' + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error loading model');
-        });
-    }
-
-    sendBtn.addEventListener('click', sendMessage);
+    sendButton.addEventListener('click', sendMessage);
     userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             sendMessage();
@@ -78,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 addMessage('AI', 'Sorry, there was an error processing your request.');
             });
         } else if (!modelLoaded) {
-            alert('Please select and load a model first.');
+            alert('Please upload and load a model first.');
         }
     }
 
@@ -86,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageElement = document.createElement('div');
         messageElement.className = 'message';
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
-        chatBox.appendChild(messageElement);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 });

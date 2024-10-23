@@ -1,8 +1,8 @@
 
 import os
 from flask import Flask, request, jsonify, send_from_directory
-import glob
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 from ctransformers import AutoModelForCausalLM
 
 app = Flask(__name__)
@@ -27,35 +27,24 @@ def index():
 def serve_static(path):
     return send_from_directory('.', path)
 
-@app.route('/load_model', methods=['POST'])
-def load_model():
+@app.route('/upload_model', methods=['POST'])
+def upload_model():
     global model
-    data = request.json
-    filename = data.get('filename')
-    if not filename or not allowed_file(filename):
-        return jsonify({'error': 'Invalid file type'}), 400
-    
-    filepath = os.path.join(MODEL_FOLDER, filename)
-    if not os.path.exists(filepath):
-        return jsonify({'error': 'Model file not found'}), 404
-    
-    try:
-        model = AutoModelForCausalLM.from_pretrained(filepath)
-        initial_greeting = model("Hello! How can I assist you today?")
-        return jsonify({'success': 'Model loaded successfully', 'initial_greeting': initial_greeting}), 200
-    except Exception as e:
-        return jsonify({'error': f'Error loading model: {str(e)}'}), 500
-
-@app.route('/model_status', methods=['GET'])
-def model_status():
-    global model
-    return jsonify({'loaded': model is not None}), 200
-
-@app.route('/models', methods=['GET'])
-def list_models():
-    model_files = glob.glob(os.path.join(MODEL_FOLDER, '*'))
-    model_names = [os.path.basename(f) for f in model_files if allowed_file(f)]
-    return jsonify(model_names), 200
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(MODEL_FOLDER, filename)
+        file.save(filepath)
+        try:
+            model = AutoModelForCausalLM.from_pretrained(filepath)
+            return jsonify({'success': 'Model uploaded and loaded successfully'}), 200
+        except Exception as e:
+            return jsonify({'error': f'Error loading model: {str(e)}'}), 500
+    return jsonify({'error': 'Invalid file type'}), 400
 
 @app.route('/chat', methods=['POST'])
 def chat():
