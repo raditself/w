@@ -20,3 +20,10 @@ Requirement already satisfied: pyyaml>=5.1 in /usr/local/lib/python3.10/dist-pac
 Requirement already satisfied: filelock in /usr/local/lib/python3.10/dist-packages (from huggingface-hub->ctransformers->-r requirements.txt (line 5)) (3.16.1)
 Requirement already satisfied: fsspec>=2023.5.0 in /usr/local/lib/python3.10/dist-packages (from huggingface-hub->ctransformers->-r requirements.txt (line 5)) (2024.10.0)
 Requirement already satisfied: tqdm>=4.42.1 in /usr/local/lib/python3.10/dist-packages (from huggingface-hub->ctransformers->-r requirements.txt (line 5)) (4.66.5)
+Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub->ctransformers->-r requirements.txt (line 5)) (3.4.0)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub->ctransformers->-r requirements.txt (line 5)) (2.2.3)
+Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub->ctransformers->-r requirements.txt (line 5)) (3.10)
+Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.10/dist-packages (from requests->huggingface-hub->ctransformers->-r requirements.txt (line 5)) (2024.8.30)
+Installing collected packages: py-cpuinfo, flask-cors, ctransformers
+Successfully installed ctransformers-0.2.27 flask-cors-5.0.0 py-cpuinfo-9.0.0
+./run_app.sh: line 4: python: command not found
