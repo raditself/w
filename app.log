@@ -27,3 +27,6 @@ Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python
  * Running on http://127.0.0.1:5001
  * Running on http://169.254.0.21:5001
 [33mPress CTRL+C to quit[0m
+ * Restarting with watchdog (inotify)
+ * Debugger is active!
+ * Debugger PIN: 259-446-379
