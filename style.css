@@ -22,6 +22,7 @@ body {
     position: fixed;
     bottom: 20px;
     right: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 #chat-container.shrink {
@@ -43,37 +44,23 @@ body {
     }
 }
 
-.chat-header {
+#shrink-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
     background-color: #007bff;
-    color: white;
-    padding: 10px;
-    text-align: center;
-}
-
-.chat-header h1 {
-    margin: 0;
-    font-size: 20px;
-}
-
-.model-upload {
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #f8f9fa;
-}
-
-#model-file {
-    flex-grow: 1;
-    margin-right: 10px;
-}
-
-#upload-model {
-    background-color: #28a745;
     color: white;
     border: none;
     padding: 5px 10px;
     cursor: pointer;
+    border-radius: 3px;
+}
+
+#model-status {
+    background-color: #f8f9fa;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
 }
 
 #chat-messages {
@@ -84,25 +71,30 @@ body {
 
 .message {
     margin-bottom: 10px;
-    padding: 5px 10px;
-    border-radius: 5px;
+    padding: 8px 12px;
+    border-radius: 15px;
+    max-width: 80%;
+    word-wrap: break-word;
 }
 
-.user-message {
+.user {
     background-color: #007bff;
     color: white;
     align-self: flex-end;
+    margin-left: auto;
 }
 
-.bot-message {
+.bot {
     background-color: #f1f0f0;
     color: black;
     align-self: flex-start;
+    margin-right: auto;
 }
 
-.chat-input {
+#chat-form {
     display: flex;
     padding: 10px;
+    background-color: #f8f9fa;
 }
 
 #user-input {
@@ -119,22 +111,48 @@ body {
     padding: 5px 10px;
     margin-left: 5px;
     cursor: pointer;
+    border-radius: 3px;
 }
 
-#model-status {
-    margin-top: 10px;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-weight: bold;
+#send-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#download-container {
+    padding: 10px;
+    background-color: #f8f9fa;
     text-align: center;
 }
 
-.status-loaded {
+#download-button {
     background-color: #28a745;
     color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
 }
 
-.status-not-loaded {
-    background-color: #dc3545;
-    color: white;
+#download-status {
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+#loading-indicator {
+    text-align: center;
+    padding: 10px;
+    font-style: italic;
+    color: #666;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+@keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
+#loading-indicator {
+    animation: pulse 1.5s infinite;
 }
